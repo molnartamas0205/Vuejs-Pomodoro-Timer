@@ -1,22 +1,27 @@
 <template>
 <div id="app">
+    <div class="timer">
+        <h1>Vue.js Pomodoro Timer</h1>
 
-    <h1>Vue.js Pomodoro Timer</h1>
+        <h1 class="time">{{minutes}}:{{seconds}}</h1>
+        <div class="controls">
+            <i v-on:click="adjustTimer('+')" class="fa fa-plus" aria-hidden="true"></i>
 
-    <h1 class="time">{{minutes}}:{{seconds}}</h1>
-    <div class="controls">
-        <i v-on:click="adjustTimer('+')" class="fa fa-plus" aria-hidden="true"></i>
+            <i v-if="running === false" v-on:click="toggleTimer()" class="fa fa-play" aria-hidden="true"></i>
 
-        <i v-if="running === false" v-on:click="startTimer()" class="fa fa-play" aria-hidden="true"></i>
+            <i v-else v-on:click="toggleTimer()" class="fa fa-pause" aria-hidden="true"></i>
 
-        <i v-else v-on:click="stopTimer()" class="fa fa-pause" aria-hidden="true"></i>
+            <i v-on:click="adjustTimer('-')" class="fa fa-minus" aria-hidden="true"></i>
+        </div>
+        <div class="controls">
 
-        <i v-on:click="adjustTimer('-')" class="fa fa-minus" aria-hidden="true"></i>
+            <i v-on:click="resetTimer('-')" class="fa fa-refresh" aria-hidden="true"></i>
+
+        </div>
     </div>
-    <div class="controls">
 
-        <i v-on:click="resetTimer('-')" class="fa fa-refresh" aria-hidden="true"></i>
-
+    <div class="credits">
+        <i class="fa fa-github" aria-hidden="true"></i>
     </div>
 </div>
 </template>
@@ -28,10 +33,12 @@ export default {
         return {
             now: Math.trunc((new Date()).getTime() / 1000),
             date: Math.trunc((new Date()).getTime() / 1000 + 1500), //our starting time
-            timer: '',
+            timerId: null,
+            timeRemaining: Math.trunc((new Date()).getTime() / 1000 + 1500),
+            sessionLength: '1500',
             running: false
 
-            //http://fareez.info/blog/countdown-timer-using-vuejs/
+
         }
     },
     computed: {
@@ -46,6 +53,7 @@ export default {
         minutes() {
             return Math.trunc((this.date - this.now) / 60) % 60;
         }
+        //http://fareez.info/blog/countdown-timer-using-vuejs/
     },
     methods: {
         adjustTimer: function(action) {
@@ -53,54 +61,91 @@ export default {
             if (this.running == false) {
                 var diff = this.date - this.now;
                 var seconds = (this.date - this.now) % 60;
-
                 if (action == '-') {
                     if (diff > 60) {
                         this.date = this.date - 60; // subtract one minute
+                        this.sessionLength = this.date - 60;
                     } else {
-                        this.date = this.now; // set to zero if less than 60 seconds
+                        this.date = this.now + 60; // set to 60 seconds, timer cannot be less than 60 seconds
+                        this.sessionLength = this.date + 60;
                     }
                 } else { //action == '+'
                     this.date = this.date + 60; // add one minute
+                    this.sessionLength = this.date + 60;
                 }
             }
 
         },
-        startTimer: function() {
+        toggleTimer: function() {
+            // @TODO add logic to account for time passed when the the timer is paused
+            if (this.running === false) {
 
-            this.running = true;
+                this.running = true;
 
-            this.timer = window.setInterval(() => {
                 this.now = Math.trunc((new Date()).getTime() / 1000);
-                if (this.now == this.date) {
-                    this.stopTimer();
-                    alert('Timer Done')
+
+                if (this.date - this.now < 1500) {
+                    this.date = Math.trunc((new Date()).getTime() / 1000 + 1500);
                 }
-            }, 1000);
+
+                this.timerId = window.setInterval(() => {
+                    this.now = Math.trunc((new Date()).getTime() / 1000);
+                    this.timeRemaining = Math.trunc((new Date()).getTime() / 1000);
+                    console.log(this.timeRemaining)
+                    if (this.now == this.date) {
+                        this.stopTimer();
+                        alert('Timer Done')
+                    }
+                }, 1000);
+
+            } else {
+                this.running = false;
+                this.now = this.timeRemaining;
+                return window.clearInterval(this.timerId)
+            }
+
 
         },
 
-        stopTimer: function() {
-            this.running = false;
-            return window.clearInterval(this.timer)
-        },
         resetTimer: function() {
             this.running = false;
-            this.stopTimer();
-            return this.date = this.now + 1500;
+            this.now = Math.trunc((new Date()).getTime() / 1000);
+            this.date = Math.trunc((new Date()).getTime() / 1000 + 1500);
+            return window.clearInterval(this.timerId)
+
         }
     }
 }
 </script>
 
 <style>
+html {
+    height: 100%;
+}
+
+body {
+    height: 100%;
+}
+
+#app {
+    height: 100%
+}
+
+.timer {
+    height: 80%;
+}
+
+.credits {
+    height: 20%;
+}
+
 #app {
     font-family: 'Open Sans', Helvetica, Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-align: center;
     color: rgba(127, 140, 141, 1.0);
-    margin-top: 60px;
+    margin-top: 0
 }
 
 h1,
