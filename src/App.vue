@@ -34,6 +34,7 @@
 <script>
 export default {
     name: 'app',
+
     data() {
         return {
             timerId: '',
@@ -44,7 +45,14 @@ export default {
             isRunning: false
         }
     },
+
+    created: function() {
+        this.minutes = this.minutes < 10 ? "0" + this.minutes : this.minutes;
+        this.seconds = this.seconds < 10 ? "0" + this.seconds : this.seconds;
+    },
+
     methods: {
+
         adjustTimer: function(action) {
 
             if (this.isRunning === false) {
@@ -75,6 +83,7 @@ export default {
             }
 
         },
+
         timerObj: function(duration) {
             this.timer = duration;
             this.duration = duration;
@@ -96,7 +105,12 @@ export default {
 
         startTimer: function() {
             this.isRunning = true;
+
             this.timerObj(this.timer);
+
+            //this.minutes = this.minutes < 10 ? "0" + this.minutes : this.minutes;
+            //this.seconds = this.seconds < 10 ? "0" + this.seconds : this.seconds;
+
         },
 
         stopTimer: function() {
