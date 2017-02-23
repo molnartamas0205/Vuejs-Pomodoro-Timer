@@ -4,20 +4,25 @@
         <h1>Vue.js Pomodoro Timer</h1>
 
         <h1 class="time">{{minutes}}:{{seconds}}</h1>
+
         <div class="controls">
+
             <i v-on:click="adjustTimer('+')" class="fa fa-plus" aria-hidden="true"></i>
 
-            <i v-if="running === false" v-on:click="toggleTimer()" class="fa fa-play" aria-hidden="true"></i>
+            <i v-if="isRunning === false" v-on:click="startTimer()" class="fa fa-play" aria-hidden="true"></i>
 
-            <i v-else v-on:click="toggleTimer()" class="fa fa-pause" aria-hidden="true"></i>
+            <i v-else v-on:click="stopTimer()" class="fa fa-pause" aria-hidden="true"></i>
 
             <i v-on:click="adjustTimer('-')" class="fa fa-minus" aria-hidden="true"></i>
+
         </div>
+
         <div class="controls">
 
             <i v-on:click="resetTimer('-')" class="fa fa-refresh" aria-hidden="true"></i>
 
         </div>
+
     </div>
 
     <div class="credits">
@@ -31,87 +36,88 @@ export default {
     name: 'app',
     data() {
         return {
-            now: Math.trunc((new Date()).getTime() / 1000),
-            date: Math.trunc((new Date()).getTime() / 1000 + 1500), //our starting time
-            timerId: null,
-            timeRemaining: Math.trunc((new Date()).getTime() / 1000 + 1500),
-            sessionLength: '1500',
-            running: false
-
-
+            timerId: '',
+            timer: 1500,
+            duration: 1500,
+            minutes: 25,
+            seconds: 0,
+            isRunning: false
         }
-    },
-    computed: {
-        seconds() {
-            var seconds = (this.date - this.now) % 60;
-
-            if (seconds.toString().length <= 1) {
-                return seconds = "0" + seconds.toString(); // add leading zeros
-            }
-            return seconds.toString();
-        },
-        minutes() {
-            return Math.trunc((this.date - this.now) / 60) % 60;
-        }
-        //http://fareez.info/blog/countdown-timer-using-vuejs/
     },
     methods: {
         adjustTimer: function(action) {
 
-            if (this.running == false) {
-                var diff = this.date - this.now;
-                var seconds = (this.date - this.now) % 60;
-                if (action == '-') {
-                    if (diff > 60) {
-                        this.date = this.date - 60; // subtract one minute
-                        this.sessionLength = this.date - 60;
-                    } else {
-                        this.date = this.now + 60; // set to 60 seconds, timer cannot be less than 60 seconds
-                        this.sessionLength = this.date + 60;
-                    }
-                } else { //action == '+'
-                    this.date = this.date + 60; // add one minute
-                    this.sessionLength = this.date + 60;
+            if (this.isRunning === false) {
+
+                if (action == '+') {
+
+                    this.duration += 60;
+                    this.timer += 60;
+
+                    this.minutes = parseInt(this.timer / 60, 10);
+                    this.seconds = parseInt(this.timer % 60, 10);
+
+                    this.minutes = this.minutes < 10 ? "0" + this.minutes : this.minutes;
+                    this.seconds = this.seconds < 10 ? "0" + this.seconds : this.seconds;
+
+                } else {
+
+                    this.duration -= 60;
+                    this.timer -= 60;
+
+                    this.minutes = parseInt(this.timer / 60, 10);
+                    this.seconds = parseInt(this.timer % 60, 10);
+
+                    this.minutes = this.minutes < 10 ? "0" + this.minutes : this.minutes;
+                    this.seconds = this.seconds < 10 ? "0" + this.seconds : this.seconds;
                 }
+
             }
 
         },
-        toggleTimer: function() {
-            // @TODO add logic to account for time passed when the the timer is paused
-            if (this.running === false) {
+        timerObj: function(duration) {
+            this.timer = duration;
+            this.duration = duration;
+            var _this = this;
+            this.timerId = setInterval(function() {
+                _this.minutes = parseInt(_this.timer / 60, 10);
+                _this.seconds = parseInt(_this.timer % 60, 10);
 
-                this.running = true;
+                _this.minutes = _this.minutes < 10 ? "0" + _this.minutes : _this.minutes;
+                _this.seconds = _this.seconds < 10 ? "0" + _this.seconds : _this.seconds;
 
-                this.now = Math.trunc((new Date()).getTime() / 1000);
-
-                if (this.date - this.now < 1500) {
-                    this.date = Math.trunc((new Date()).getTime() / 1000 + 1500);
+                if (--_this.timer < 0) {
+                    _this.timer = _this.duration;
+                    _this.resetTimer();
                 }
+            }, 1000);
 
-                this.timerId = window.setInterval(() => {
-                    this.now = Math.trunc((new Date()).getTime() / 1000);
-                    this.timeRemaining = Math.trunc((new Date()).getTime() / 1000);
-                    console.log(this.timeRemaining)
-                    if (this.now == this.date) {
-                        this.stopTimer();
-                        alert('Timer Done')
-                    }
-                }, 1000);
+        },
 
-            } else {
-                this.running = false;
-                this.now = this.timeRemaining;
-                return window.clearInterval(this.timerId)
-            }
+        startTimer: function() {
+            this.isRunning = true;
+            this.timerObj(this.timer);
+        },
 
-
+        stopTimer: function() {
+            console.log('stop');
+            this.isRunning = false;
+            return window.clearInterval(this.timerId);
         },
 
         resetTimer: function() {
-            this.running = false;
-            this.now = Math.trunc((new Date()).getTime() / 1000);
-            this.date = Math.trunc((new Date()).getTime() / 1000 + 1500);
-            return window.clearInterval(this.timerId)
+            this.isRunning = false;
+
+            this.timer = 1500; // 25min default
+            this.duration = 1500;
+
+            this.minutes = parseInt(this.timer / 60, 10);
+            this.seconds = parseInt(this.timer % 60, 10);
+
+            this.minutes = this.minutes < 10 ? "0" + this.minutes : this.minutes;
+            this.seconds = this.seconds < 10 ? "0" + this.seconds : this.seconds;
+
+            return window.clearInterval(this.timerId);
 
         }
     }
