@@ -68,7 +68,7 @@ export default {
                     this.minutes = this.minutes < 10 ? "0" + this.minutes : this.minutes;
                     this.seconds = this.seconds < 10 ? "0" + this.seconds : this.seconds;
 
-                } else {
+                } else if(this.minutes > 1) {
 
                     this.duration -= 60;
                     this.timer -= 60;
